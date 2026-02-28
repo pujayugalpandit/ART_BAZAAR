@@ -1,0 +1,84 @@
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #f3e7ff, #e6f0ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.auth-card {
+  background: white;
+  width: 400px;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+.auth-card h2 {
+  margin-bottom: 8px;
+}
+
+.auth-card p {
+  color: #777;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  margin-bottom: 18px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #f7f7f7;
+}
+
+.role-selector {
+  display: flex;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.role-box {
+  flex: 1;
+  padding: 20px;
+  text-align: center;
+  border-radius: 12px;
+  border: 2px solid #ddd;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.role-box.active {
+  border-color: #9b3dff;
+  background: #f5ecff;
+  color: #9b3dff;
+}
+
+.auth-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  color: white;
+  font-weight: bold;
+  background: linear-gradient(90deg, #6a11cb, #ff0080);
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.switch-link {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+}

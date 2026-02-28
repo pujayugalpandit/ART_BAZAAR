@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Art Bazaar — Marketplace</title>
+
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Supabase client (already in your project) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/marketplace.js" defer></script>
+</head>
+<body>
+
+  <!-- NAV -->
+  <header class="navbar">
+  <div class="logo">🎨 <span>Art Bazaar</span></div>
+  <nav>
+    <a href="index.html" class="nav-home">Home</a>
+    <a href="cart.html" class="cart-link">
+      🛒 <span id="cartCount" class="cart-badge">0</span>
+    </a>
+    <a href="login.html" class="btn-light">Logout</a>
+  </nav>
+</header>
+  <!-- HERO -->
+    
+  <section class="market-hero">
+    <div class="container">
+      <h1>Explore the Marketplace</h1>
+      <p>Discover unique artworks from talented artists around the world</p>
+    </div>
+  </section>
+
+  <!-- FILTERS -->
+  <section class="filters container">
+    <input id="searchInput" type="search" placeholder="Search artworks, artists..." />
+
+    <select id="categorySelect" aria-label="Category">
+      <option value="all">All Categories</option>
+      <option>Painting</option>
+      <option>Sculpture</option>
+      <option>Digital Art</option>
+      <option>Photography</option>
+      <option>Contemporary</option>
+      <option>Mixed Media</option>
+      <option>Print</option>
+      <option>Illustration</option>
+    </select>
+
+    <!-- Price control: minus / slider / plus -->
+    <div class="price-control" role="group" aria-label="Maximum price filter">
+      <button id="priceMinus" class="icon-btn" type="button">−</button>
+      <input id="priceRange" type="range" min="500" max="20000" step="500" value="20000" />
+      <button id="pricePlus" class="icon-btn" type="button">+</button>
+      <div id="priceDisplay">Max: <span id="priceValue">₹20,000</span></div>
+    </div>
+  </section>
+
+  <div class="container">
+    <p class="results-count" id="resultsCount">Showing artworks</p>
+  </div>
+
+  <!-- ART GRID -->
+  <section class="art-grid container" id="artGrid" aria-live="polite">
+    
+    
+    <!-- JS injects cards here -->
+  </section>
+
+</body>
+</html>
