@@ -1,87 +1,866 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Art Bazaar</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Art Bazaar — Discover Extraordinary Art</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --purple: #7b2ff7;
+      --pink: #f107a3;
+      --gradient: linear-gradient(135deg, #7b2ff7, #f107a3);
+      --dark: #0e0e12;
+      --mid: #1a1a22;
+      --light-bg: #f8f7ff;
+      --text: #0e0e12;
+      --muted: #6b6b80;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #fff;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 48px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(123,47,247,0.08);
+      transition: all 0.3s ease;
+    }
+
+    .navbar.scrolled {
+      padding: 12px 48px;
+      box-shadow: 0 4px 24px rgba(123,47,247,0.08);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo span {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .btn-nav {
+      background: var(--gradient);
+      color: white !important;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-weight: 600 !important;
+      transition: opacity 0.2s, transform 0.2s !important;
+    }
+
+    .btn-nav:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      background: #faf8ff;
+      padding: 120px 48px 80px;
+    }
+
+    /* Background decoration */
+    .hero-bg-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.18;
+      pointer-events: none;
+    }
+
+    .orb-1 {
+      width: 600px; height: 600px;
+      background: #7b2ff7;
+      top: -100px; right: -150px;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .orb-2 {
+      width: 400px; height: 400px;
+      background: #f107a3;
+      bottom: -80px; left: -100px;
+      animation: float 10s ease-in-out infinite reverse;
+    }
+
+    .orb-3 {
+      width: 300px; height: 300px;
+      background: #7b2ff7;
+      top: 40%; left: 40%;
+      animation: float 12s ease-in-out infinite 2s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-30px) scale(1.05); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 900px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(123,47,247,0.1);
+      border: 1px solid rgba(123,47,247,0.2);
+      color: var(--purple);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--purple);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(48px, 7vw, 88px);
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s ease 0.1s both;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 19px;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+      font-weight: 400;
+      animation: fadeUp 0.6s ease 0.2s both;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeUp 0.6s ease 0.3s both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gradient);
+      color: white;
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 24px rgba(123,47,247,0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 36px rgba(123,47,247,0.4);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      color: var(--text);
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 1.5px solid rgba(123,47,247,0.2);
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--purple);
+      background: rgba(123,47,247,0.04);
+      transform: translateY(-1px);
+    }
+
+    /* Floating art cards preview */
+    .hero-art-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 680px;
+      margin: 60px auto 0;
+      animation: fadeUp 0.6s ease 0.4s both;
+    }
+
+    .hero-art-card {
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 3/4;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+      transform: rotate(var(--rotate, 0deg));
+      transition: transform 0.3s ease;
+    }
+
+    .hero-art-card:nth-child(1) { --rotate: -2deg; }
+    .hero-art-card:nth-child(2) { --rotate: 0deg; transform: translateY(-16px); }
+    .hero-art-card:nth-child(3) { --rotate: 2deg; }
+
+    .hero-art-card:hover { transform: rotate(0deg) translateY(-8px) scale(1.02) !important; }
+
+    .hero-art-card-inner {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--c1), var(--c2));
+      display: flex;
+      align-items: flex-end;
+      padding: 12px;
+    }
+
+    .hero-art-card:nth-child(1) .hero-art-card-inner { --c1: #e8d5ff; --c2: #c4a8f5; }
+    .hero-art-card:nth-child(2) .hero-art-card-inner { --c1: #ffd6ee; --c2: #f5a8d8; }
+    .hero-art-card:nth-child(3) .hero-art-card-inner { --c1: #d5e8ff; --c2: #a8c8f5; }
+
+    .hero-art-label {
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(8px);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .hero-art-label small {
+      display: block;
+      color: var(--muted);
+      font-weight: 400;
+      font-size: 11px;
+    }
+
+    /* Art canvas decoration inside cards */
+    .art-canvas {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 52px;
+      opacity: 0.6;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      background: var(--dark);
+      padding: 40px 48px;
+      display: flex;
+      justify-content: center;
+      gap: 80px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      text-align: center;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .stat-item .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 40px;
+      font-weight: 700;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .stat-item .stat-label {
+      color: rgba(255,255,255,0.6);
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── WHY SECTION ── */
+    .why {
+      padding: 100px 48px;
+      background: #fff;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .section-eyebrow {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--purple);
+      margin-bottom: 16px;
+    }
+
+    .section-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(32px, 4vw, 48px);
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .section-header p {
+      color: var(--muted);
+      font-size: 17px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: var(--light-bg);
+      padding: 36px 32px;
+      border-radius: 20px;
+      border: 1px solid rgba(123,47,247,0.06);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--gradient);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      border-radius: 20px;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 24px 60px rgba(123,47,247,0.12);
+    }
+
+    .feature-card:hover::after { opacity: 0.04; }
+
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+
+    .feature-icon.purple { background: rgba(123,47,247,0.12); }
+    .feature-icon.pink   { background: rgba(241,7,163,0.1); }
+    .feature-icon.blue   { background: rgba(59,130,246,0.1); }
+    .feature-icon.green  { background: rgba(16,185,129,0.1); }
+
+    .feature-card h3 {
+      font-size: 19px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how-it-works {
+      background: var(--light-bg);
+      padding: 100px 48px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 32px;
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 40px;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(123,47,247,0.2), transparent);
+    }
+
+    .step {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .step-number {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--gradient);
+      color: white;
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(123,47,247,0.3);
+    }
+
+    .step h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── FINAL CTA ── */
+    .cta-section {
+      background: var(--dark);
+      padding: 100px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(123,47,247,0.3), transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .cta-section > * { position: relative; z-index: 1; }
+
+    .cta-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 5vw, 60px);
+      color: white;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    .cta-section h2 em {
+      font-style: italic;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cta-section p {
+      color: rgba(255,255,255,0.65);
+      font-size: 18px;
+      margin-bottom: 40px;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-white {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      color: var(--purple);
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .btn-white:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(255,255,255,0.2);
+    }
+
+    .btn-outline-white {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: white;
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      transition: all 0.2s;
+    }
+
+    .btn-outline-white:hover {
+      border-color: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.05);
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: #070709;
+      padding: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .footer p {
+      color: rgba(255,255,255,0.35);
+      font-size: 13px;
+    }
+
+    @media (max-width: 768px) {
+      .navbar { padding: 14px 20px; }
+      .nav-links { gap: 16px; }
+      .hero { padding: 100px 20px 60px; }
+      .stats-strip { gap: 40px; padding: 40px 20px; }
+      .why, .how-it-works, .cta-section { padding: 70px 20px; }
+      .hero-art-grid { display: none; }
+      .steps::before { display: none; }
+    }
+  </style>
 </head>
 
 <body>
 
-  <!-- HEADER -->
-  <header class="navbar">
-  <div class="logo">🎨 <span>Art Bazaar</span></div>
-
-  <nav id="mainNav">
-    <a href="index.html">Home</a>
-    <a href="login.html" id="authLink" class="btn-light">Login</a>
-  </nav>
-</header>
+  <!-- NAVBAR -->
+  <header class="navbar" id="navbar">
+    <a href="index.html" class="logo">
+      <div class="logo-icon">🎨</div>
+      <span>Art Bazaar</span>
+    </a>
+    <nav class="nav-links" id="mainNav">
+      <a href="index.html">Home</a>
+      <a href="marketplace.html">Marketplace</a>
+      <a href="login.html" id="authLink" class="btn-nav">Login</a>
+    </nav>
+  </header>
 
   <!-- HERO -->
   <section class="hero">
-    <h1>
-      Discover & Collect <br>
-      <span class="gradient-text">Extraordinary Art</span>
-    </h1>
+    <div class="hero-bg-orb orb-1"></div>
+    <div class="hero-bg-orb orb-2"></div>
+    <div class="hero-bg-orb orb-3"></div>
 
-    <p>
-      Connect with talented artists worldwide. Buy unique pieces
-      or showcase your creative work to art enthusiasts.
-    </p>
+    <div class="hero-content">
+      <div class="hero-badge">✦ India's Premier Art Marketplace</div>
 
-    <div class="hero-buttons">
-  <a href="marketplace.html" class="btn-gradient">Explore Marketplace →</a>
-  <a href="login.html" class="btn-light">Join as Artist</a>
-</div>
+      <h1>
+        Discover &amp; Collect<br>
+        <em>Extraordinary Art</em>
+      </h1>
+
+      <p>
+        Connect with India's most talented artists. Buy one-of-a-kind pieces
+        or showcase your creative work to thousands of art enthusiasts.
+      </p>
+
+      <div class="hero-cta">
+        <a href="marketplace.html" class="btn-primary">
+          Explore Marketplace
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="login.html" class="btn-secondary">
+          Join as Artist
+        </a>
+      </div>
+
+      <!-- Decorative mini art cards -->
+      <div class="hero-art-grid">
+        <div class="hero-art-card">
+          <div class="hero-art-card-inner">
+            <div class="art-canvas">🌸</div>
+            <div class="hero-art-label">
+              Floral Dreams
+              <small>by Priya Sharma</small>
+            </div>
+          </div>
+        </div>
+        <div class="hero-art-card">
+          <div class="hero-art-card-inner">
+            <div class="art-canvas">🎭</div>
+            <div class="hero-art-label">
+              Urban Echoes
+              <small>by Arjun Mehra</small>
+            </div>
+          </div>
+        </div>
+        <div class="hero-art-card">
+          <div class="hero-art-card-inner">
+            <div class="art-canvas">🌊</div>
+            <div class="hero-art-label">
+              Blue Horizon
+              <small>by Kavya Nair</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
+
+  <!-- STATS STRIP -->
+  <div class="stats-strip">
+    <div class="stat-item">
+      <div class="stat-num">2,400+</div>
+      <div class="stat-label">Original Artworks</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">340+</div>
+      <div class="stat-label">Verified Artists</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">8,900+</div>
+      <div class="stat-label">Happy Collectors</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Secure Payments</div>
+    </div>
+  </div>
 
   <!-- WHY SECTION -->
   <section class="why">
-    <h2>Why Choose Art Bazaar?</h2>
-    <p class="subtitle">
-      The premier marketplace for artists and collectors
-    </p>
+    <div class="section-header">
+      <span class="section-eyebrow">Why Art Bazaar</span>
+      <h2>Everything you need<br>in one place</h2>
+      <p>The premier marketplace built for both artists and collectors to thrive.</p>
+    </div>
 
     <div class="features">
-
-      <div class="card">
-        <div class="icon purple">🎨</div>
+      <div class="feature-card">
+        <div class="feature-icon purple">🎨</div>
         <h3>For Artists</h3>
-        <p>
-          Showcase your work to a global audience. Set your own prices
-          and manage your portfolio with ease.
-        </p>
+        <p>Showcase your work to a global audience. Set your own prices and manage your entire portfolio with our intuitive artist dashboard.</p>
       </div>
 
-      <div class="card">
-        <div class="icon pink">🛍️</div>
+      <div class="feature-card">
+        <div class="feature-icon pink">🛍️</div>
         <h3>For Buyers</h3>
-        <p>
-          Discover unique pieces from talented artists.
-          Purchase with confidence and build your collection.
-        </p>
+        <p>Discover unique, one-of-a-kind pieces from talented artists. Purchase with confidence and start building your dream collection.</p>
       </div>
 
-      <div class="card">
-        <div class="icon blue">👥</div>
+      <div class="feature-card">
+        <div class="feature-icon blue">👥</div>
         <h3>Community</h3>
-        <p>
-          Join a vibrant community of artists and art lovers.
-          Connect, share, and grow together.
-        </p>
+        <p>Join a vibrant, growing community of artists and art lovers across India. Connect, share, and grow together.</p>
       </div>
 
-      <div class="card">
-        <div class="icon green">🛡️</div>
+      <div class="feature-card">
+        <div class="feature-icon green">🛡️</div>
         <h3>Secure Transactions</h3>
-        <p>
-          Shop with confidence. All transactions are protected
-          and secure.
-        </p>
+        <p>Shop with total confidence. All payments are secured by Razorpay with end-to-end encryption and buyer protection.</p>
       </div>
-
     </div>
   </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-it-works">
+    <div class="section-header">
+      <span class="section-eyebrow">How It Works</span>
+      <h2>Start in three steps</h2>
+      <p>Whether you're buying or selling, getting started takes just minutes.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Create an Account</h3>
+        <p>Sign up as a buyer or artist in under a minute. No setup fees, no commitments.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Browse or Upload</h3>
+        <p>Explore thousands of artworks or upload your own creations to your portfolio.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Buy or Sell Securely</h3>
+        <p>Complete transactions with confidence through our secure Razorpay-powered checkout.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="cta-section">
+    <h2>Ready to begin your<br><em>art journey?</em></h2>
+    <p>Join thousands of artists and collectors on India's most vibrant art marketplace.</p>
+    <div class="cta-buttons">
+      <a href="marketplace.html" class="btn-white">
+        Explore Art →
+      </a>
+      <a href="login.html" class="btn-outline-white">
+        Create Free Account
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-logo">🎨 Art Bazaar</div>
+    <p>© 2025 Art Bazaar. All rights reserved.</p>
+    <p style="color: rgba(255,255,255,0.35); font-size:13px;">Powered by Razorpay & Supabase</p>
+  </footer>
+
+  <script>
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 40) navbar.classList.add('scrolled');
+      else navbar.classList.remove('scrolled');
+    });
+
+    // Scroll-triggered fade-ins
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.style.animation = 'fadeUp 0.6s ease both';
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.feature-card, .step, .stat-item').forEach(el => {
+      el.style.opacity = '0';
+      observer.observe(el);
+    });
+  </script>
 
 </body>
 </html>
