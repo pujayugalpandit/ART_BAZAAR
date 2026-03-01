@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Successful - Art Bazaar</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      padding: 60px 40px;
+      text-align: center;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 60px;
+      animation: bounce 0.6s ease-out;
+    }
+
+    @keyframes bounce {
+      0% {
+        transform: scale(0);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    h1 {
+      color: #333;
+      font-size: 36px;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 16px;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .order-details {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 40px;
+      text-align: left;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      color: #666;
+      font-weight: 500;
+    }
+
+    .detail-value {
+      color: #333;
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    .amount {
+      font-size: 24px;
+      color: #667eea;
+      margin-top: 15px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 14px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-secondary {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+    }
+
+    .btn-secondary:hover {
+      background: #f8f9fa;
+    }
+
+    .footer {
+      margin-top: 40px;
+      padding-top: 30px;
+      border-top: 1px solid #e0e0e0;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .logo {
+      margin-bottom: 30px;
+      font-size: 32px;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .success-message {
+      color: #4caf50;
+      font-weight: 600;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 40px 25px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .success-icon {
+        width: 80px;
+        height: 80px;
+        font-size: 50px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="logo">🎨 Art Bazaar</div>
+
+  <div class="success-icon">✓</div>
+
+  <h1>Payment Successful!</h1>
+
+  <p class="success-message">Thank you for your purchase!</p>
+
+  <p class="subtitle">
+    Your order has been confirmed and payment verified. You will receive an order confirmation email shortly with details and tracking information.
+  </p>
+
+  <div class="order-details" id="orderDetails">
+    <div class="detail-row">
+      <span class="detail-label">Order Status</span>
+      <span class="detail-value">✅ Confirmed</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Order ID</span>
+      <span class="detail-value" id="orderId">-</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Payment Method</span>
+      <span class="detail-value">UPI</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Payment ID</span>
+      <span class="detail-value" id="paymentId">-</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Date & Time</span>
+      <span class="detail-value" id="dateTime">-</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Total Amount</span>
+      <span class="detail-value amount" id="totalAmount">-</span>
+    </div>
+  </div>
+
+  <div class="button-group">
+    <a href="marketplace.html" class="btn btn-primary">Continue Shopping</a>
+    <a href="cart.html" class="btn btn-secondary">View Cart</a>
+  </div>
+
+  <div class="footer">
+    <p>Need help? Visit <a href="mailto:support@artbazaar.com" style="color: #667eea; text-decoration: none;">support@artbazaar.com</a></p>
+    <p style="margin-top: 10px;">Payment secured by Razorpay</p>
+  </div>
+</div>
+
+<script>
+  // Get order details from sessionStorage
+  function displayOrderDetails() {
+    const lastOrder = sessionStorage.getItem('lastOrder');
+    
+    if (lastOrder) {
+      try {
+        const order = JSON.parse(lastOrder);
+        
+        // Display Order ID
+        const orderIdEl = document.getElementById('orderId');
+        if (orderIdEl && order.orderId) {
+          orderIdEl.innerText = order.orderId;
+        }
+        
+        // Display Payment ID
+        const paymentIdEl = document.getElementById('paymentId');
+        if (paymentIdEl && order.paymentId) {
+          paymentIdEl.innerText = order.paymentId;
+        }
+        
+        // Display Date & Time
+        const dateTimeEl = document.getElementById('dateTime');
+        if (dateTimeEl) {
+          const now = new Date();
+          const formattedDate = now.toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          });
+          dateTimeEl.innerText = formattedDate;
+        }
+        
+        // Display Total Amount
+        const totalAmountEl = document.getElementById('totalAmount');
+        if (totalAmountEl && order.amount) {
+          const amountInRupees = (order.amount / 100).toFixed(2);
+          totalAmountEl.innerText = '₹' + parseFloat(amountInRupees).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
+        }
+        
+        console.log('✅ Order details displayed:', order);
+      } catch (err) {
+        console.error('❌ Error parsing order details:', err);
+      }
+    } else {
+      console.warn('⚠️ No order details found in sessionStorage');
+    }
+  }
+  
+  // Display details when page loads
+  document.addEventListener('DOMContentLoaded', displayOrderDetails);
+  
+  // Clear sessionStorage after displaying (optional - keeps it for reference)
+  // sessionStorage.removeItem('lastOrder');
+</script>
+
+</body>
+</html>
