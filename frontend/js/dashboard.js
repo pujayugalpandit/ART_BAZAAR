@@ -8,8 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  /* ---------------- ROLE CHECK ---------------- */
-
+  /* ── ROLE CHECK ── */
   const { data: userData, error: roleError } = await supabase
     .from("users")
     .select("role")
@@ -20,172 +19,193 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = "index.html";
     return;
   }
-  
-  /* ---------------- LOAD STATS ---------------- */
 
+  /* ── LOAD STATS ── */
   async function loadStats() {
-
     const { data: artworks } = await supabase
       .from("artworks")
       .select("*")
       .eq("artist_id", user.id);
 
-    document.getElementById("totalArtworks").innerText =
-      artworks ? artworks.length : 0;
+    document.getElementById("totalArtworks").innerText = artworks ? artworks.length : 0;
 
     let totalPrice = 0;
     artworks?.forEach(a => totalPrice += Number(a.price));
 
     document.getElementById("avgPrice").innerText =
       "₹" + (artworks?.length
-        ? (totalPrice / artworks.length).toLocaleString("en-IN")
+        ? Math.round(totalPrice / artworks.length).toLocaleString("en-IN")
         : "0");
 
     renderArtworks(artworks || []);
   }
 
-  /* ---------------- RENDER ARTWORKS ---------------- */
-
+  /* ── RENDER ARTWORKS ── */
   function renderArtworks(list) {
-
     const container = document.getElementById("yourArtworks");
     if (!container) return;
 
     container.innerHTML = "";
 
     if (!list.length) {
-      container.innerHTML = "<p>No artworks yet.</p>";
+      container.innerHTML = `
+        <div style="
+          grid-column: 1/-1;
+          text-align:center;
+          padding:60px 20px;
+          color:#aaa;
+          background:white;
+          border-radius:14px;
+        ">
+          <div style="font-size:52px;">🎨</div>
+          <p style="margin-top:10px; font-size:15px;">No artworks yet. Click <strong>+ Add Artwork</strong> to get started!</p>
+        </div>
+      `;
       return;
     }
 
     list.forEach(art => {
-
-      const imageSrc = art.image_url
-        ? art.image_url
-        : "https://via.placeholder.com/300x200?text=No+Image";
+      const imageSrc = art.image_url || "https://via.placeholder.com/300x200?text=No+Image";
 
       container.innerHTML += `
-        <div class="art-card" style="margin-bottom:20px;">
-          <img src="${imageSrc}" 
-               style="width:100%;height:200px;object-fit:cover;border-radius:8px;">
-          <h3>${art.title}</h3>
-          <p>₹${Number(art.price).toLocaleString("en-IN")}</p>
-          <p>${art.category}</p>
-
-          <div style="margin-top:10px;">
-            <button onclick="editArtwork('${art.id}')">Edit</button>
-            <button onclick="deleteArtwork('${art.id}')">Delete</button>
+        <div class="art-card">
+          <img src="${imageSrc}" alt="${art.title}"
+               onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+          <div class="art-card-body">
+            <h3>${art.title}</h3>
+            <div class="price">₹${Number(art.price).toLocaleString("en-IN")}</div>
+            <div class="category">${art.category || ""}</div>
+            <div class="art-actions">
+              <button class="btn-edit" onclick="editArtwork('${art.id}')">✏️ Edit</button>
+              <button class="btn-delete" onclick="deleteArtwork('${art.id}')">🗑 Delete</button>
+            </div>
           </div>
         </div>
       `;
     });
   }
 
-  /* ---------------- DELETE ---------------- */
-
+  /* ── DELETE ── */
   window.deleteArtwork = async function (id) {
+    if (!confirm("Are you sure you want to delete this artwork?")) return;
 
-    if (!confirm("Are you sure you want to delete this artwork?"))
-      return;
-
-    const { error } = await supabase
-      .from("artworks")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("artworks").delete().eq("id", id);
 
     if (error) {
-      alert("Delete failed");
-      console.error(error);
+      showToast("❌ Delete failed", "error");
     } else {
-      alert("Artwork deleted!");
+      showToast("🗑 Artwork deleted");
       loadStats();
     }
   };
 
-  /* ---------------- EDIT ---------------- */
-
+  /* ── EDIT ── */
   window.editArtwork = function (id) {
     window.location.href = `edit-artwork.html?id=${id}`;
   };
 
-  /* ---------------- UPLOAD ---------------- */
-
+  /* ── UPLOAD ── */
   document.getElementById("uploadBtn").addEventListener("click", async () => {
+    const title       = document.getElementById("title").value.trim();
+    const price       = document.getElementById("price").value.trim();
+    const category    = document.getElementById("category").value;
+    const description = document.getElementById("description").value.trim();
+    const dimensions  = document.getElementById("dimensions").value.trim();
+    const medium      = document.getElementById("medium").value.trim();
+    const files       = document.getElementById("mediaFiles").files;
 
-    const title = document.getElementById("title").value;
-    const price = document.getElementById("price").value;
-    const category = document.getElementById("category").value;
-    const description = document.getElementById("description").value;
-    const dimensions = document.getElementById("dimensions").value;
-    const medium = document.getElementById("medium").value;
+    if (!title || !price || !category) {
+      showToast("⚠️ Title, Price and Category are required", "error");
+      return;
+    }
 
-    const files = document.getElementById("mediaFiles").files;
+    const uploadBtn = document.getElementById("uploadBtn");
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = "<span>⏳</span> Uploading...";
 
     let image_url = null;
 
-    /* ---- Upload first image only ---- */
-    
-    if (files.length > 0) {
+    try {
+      /* ── Upload image ── */
+      if (files.length > 0) {
+        const { interval, fill } = animateProgress("Uploading image...");
 
-      const file = files[0];
-      const filePath = `${user.id}/${Date.now()}_${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("artworks")
-        .upload(filePath, file);
+        const file = files[0];
+        const filePath = `${user.id}/${Date.now()}_${file.name}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("artworks")
+          .upload(filePath, file);
+
+        clearInterval(interval);
+
         if (uploadError) {
-          console.error(uploadError);
-          alert(uploadError.message);
+          showToast("❌ Image upload failed: " + uploadError.message, "error");
+          uploadBtn.disabled = false;
+          uploadBtn.innerHTML = "<span>🚀</span> Upload Artwork";
           return;
         }
 
-      const { data } = supabase.storage
-        .from("artworks")
-        .getPublicUrl(filePath);
+        const { data: urlData } = supabase.storage
+          .from("artworks")
+          .getPublicUrl(filePath);
 
-      image_url = data.publicUrl;
-    }
+        image_url = urlData.publicUrl;
+        completeProgress();
+      }
 
-    /* ---- Insert artwork once ---- */
+      /* ── Insert artwork ── */
+      document.getElementById("progressLabel").textContent = "Saving artwork...";
 
-    const { error } = await supabase
-      .from("artworks")
-      .insert({
+      const { error } = await supabase.from("artworks").insert({
         title,
-        price,
+        price: parseFloat(price),
         category,
         description,
         dimensions,
         medium,
         artist_id: user.id,
         artist_name: user.user_metadata?.full_name || "",
-        image_url
+        image_url,
       });
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+      if (error) {
+        showToast("❌ " + error.message, "error");
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = "<span>🚀</span> Upload Artwork";
+        return;
+      }
 
-    alert("Artwork uploaded!");
-    closeModal();
-    loadStats();
+      completeProgress();
+      showToast("✅ Artwork uploaded successfully!");
+
+      setTimeout(() => {
+        closeModal();
+        loadStats();
+      }, 800);
+
+    } catch (err) {
+      showToast("❌ Unexpected error: " + err.message, "error");
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = "<span>🚀</span> Upload Artwork";
+    }
   });
 
-  /* ---------------- MODAL ---------------- */
+  /* ── LOGOUT ── */
+  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    window.location.href = "login.html";
+  });
 
-  window.closeModal = function () {
-    document.getElementById("artModal").classList.add("hidden");
-  };
-
-  document.getElementById("openModal").onclick =
-    () => document.getElementById("artModal").classList.remove("hidden");
-
-  /* ---------------- INIT ---------------- */
-
+  /* ── INIT ── */
   loadStats();
+});
 
-});
-document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-  await supabase.auth.signOut();
-  window.location.href = "login.html";
-});
+/* ── TOAST HELPER (also used inline in HTML) ── */
+function showToast(msg, type = "success") {
+  const t = document.getElementById("toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.className = "toast", 3500);
+}
