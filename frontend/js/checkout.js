@@ -59,7 +59,6 @@ async function loadCheckoutCart(userId) {
     }
 
     if (!data || data.length === 0) {
-      console.warn("⚠️ Cart is empty");
       alert("Your cart is empty!");
       window.location.href = "cart.html";
       return;
