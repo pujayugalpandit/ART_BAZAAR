@@ -40,6 +40,24 @@ async function loadCart() {
   const container = document.getElementById("cartItems");
   container.innerHTML = "";
 
+  // ✅ FIX: Check if coming from successful payment
+  const fromPayment = sessionStorage.getItem("paymentSuccess");
+  
+  // If empty cart AND coming from payment, don't show popup
+  if ((!data || data.length === 0) && fromPayment) {
+    console.log("✅ Payment completed - cart cleared by design");
+    sessionStorage.removeItem("paymentSuccess");
+    // Redirect to marketplace instead of showing popup
+    window.location.href = "marketplace.html";
+    return;
+  }
+
+  // Show popup only if user manually came to empty cart (not from payment)
+  if (!data || data.length === 0) {
+    alert("Your cart is empty!");
+    return;
+  }
+
   let subtotal = 0;
 
   data.forEach(item => {
@@ -176,10 +194,17 @@ async function loadCartCount() {
   const badge = document.getElementById("cartCount");
   if (badge) badge.innerText = count;
 }
+
+/* ================= CHECKOUT BUTTON ================= */
+
 document.addEventListener("DOMContentLoaded", () => {
   const checkoutBtn = document.querySelector(".checkout-btn");
 
   if (checkoutBtn) {
-    checkoutBtn.addEventListener("click", startPayment);
+    checkoutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      // Navigate to checkout page to collect shipping details
+      window.location.href = "checkout.html";
+    });
   }
 });
