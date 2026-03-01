@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   /* ── ROLE CHECK ── */
   const { data: userData, error: roleError } = await supabase
     .from("users")
-    .select("role")
+    .select("role, full_name")       
     .eq("id", user.id)
     .single();
 
@@ -19,6 +19,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = "index.html";
     return;
   }
+
+  // ✅ Resolve artist name once — from users table first, then metadata fallback
+  const artistName = userData.full_name
+    || user.user_metadata?.full_name
+    || "Unknown Artist";
 
   /* ── LOAD STATS ── */
   async function loadStats() {
@@ -165,7 +170,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         dimensions,
         medium,
         artist_id: user.id,
-        artist_name: user.user_metadata?.full_name || "",
+        artist_name: artistName,    
         image_url,
       });
 
@@ -201,7 +206,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadStats();
 });
 
-/* ── TOAST HELPER (also used inline in HTML) ── */
+/* ── TOAST HELPER ── */
 function showToast(msg, type = "success") {
   const t = document.getElementById("toast");
   if (!t) return;

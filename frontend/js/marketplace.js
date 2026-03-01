@@ -99,26 +99,26 @@ function renderArtworks(artworks) {
   if (resultsCount) {
     resultsCount.textContent = `Showing ${artworks.length} artwork${artworks.length !== 1 ? "s" : ""}`;
   }
-
-  artworks.forEach((art) => {
-    grid.innerHTML += `
-      <div class="art-card">
-        <div class="image-wrapper">
-          <img src="${art.image_url}" alt="${art.title}" onerror="this.src='https://via.placeholder.com/300x240?text=No+Image'" />
-        </div>
-        <div class="art-content">
-          <span class="category-tag">${art.category || "Art"}</span>
-          <div class="art-title">${art.title}</div>
-          <div class="art-artist">by ${art.artist_name || "Unknown Artist"}</div>
-          <div class="price">₹${Number(art.price).toLocaleString("en-IN")}</div>
+data.forEach(art => {
+  grid.innerHTML += `
+    <div class="art-card">
+      <div class="image-wrapper">
+        <img src="${art.image_url}" alt="${art.title}" onerror="this.src='https://via.placeholder.com/300x240?text=No+Image'" />
+        <button class="wishlist-btn" data-id="${art.id}">🤍</button>
+      </div>
+      <div class="art-content">
+        <span class="category-tag">${art.category || 'Art'}</span>
+        <div class="art-title">${art.title}</div>
+        <div class="art-artist">by ${art.artist_name || 'Unknown Artist'}</div>
+        <div class="art-footer">
+          <span class="price">₹${Number(art.price).toLocaleString("en-IN")}</span>
           <button class="add-cart-btn" data-id="${art.id}">Add to Cart</button>
         </div>
       </div>
-    `;
-  });
+    </div>
+  `;
+});
 }
-
-/* ================= FILTER SETUP (BUG FIX) ================= */
 
 function setupFilters() {
   const searchInput = document.getElementById("searchInput");

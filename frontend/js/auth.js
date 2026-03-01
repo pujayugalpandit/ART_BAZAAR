@@ -38,7 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const { data, error } = await supabase.auth.signUp({
         email,
-        password
+        password,
+        options: {
+    data: {
+      full_name: fullName   // ← this saves the name to user metadata
+    }
+  }
       });
 
       if (error) {
