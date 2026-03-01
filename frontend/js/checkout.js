@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", initCheckout);
 
 async function initCheckout() {
   console.log("🔄 Initializing checkout page...");
-  
+
   const { data: sessionData } = await supabase.auth.getSession();
   const user = sessionData.session?.user;
 
@@ -20,9 +20,8 @@ async function initCheckout() {
 
   console.log("✅ User authenticated:", user.email);
 
-  // IMPORTANT: Load cart FIRST before everything else
   await loadCheckoutCart(user.id);
-  
+
   const emailInput = document.getElementById("email");
   if (emailInput) {
     emailInput.value = user.email;
@@ -38,7 +37,7 @@ async function initCheckout() {
 async function loadCheckoutCart(userId) {
   try {
     console.log("🔄 Loading cart data for user:", userId);
-    
+
     const { data, error } = await supabase
       .from("cart")
       .select(`
@@ -68,11 +67,7 @@ async function loadCheckoutCart(userId) {
 
     cartData = data;
     console.log("✅ Cart loaded:", data.length, "items");
-    console.log("📦 Cart data:", cartData);
-    
-    // IMPORTANT: Display summary AFTER loading cart
     displayOrderSummary();
-    
   } catch (err) {
     console.error("❌ Error loading cart:", err);
   }
@@ -80,8 +75,6 @@ async function loadCheckoutCart(userId) {
 
 function displayOrderSummary() {
   try {
-    console.log("🔄 Displaying order summary...");
-    
     if (!cartData || cartData.length === 0) {
       console.error("❌ No cart data to display");
       return;
@@ -90,7 +83,7 @@ function displayOrderSummary() {
     let subtotal = 0;
     let itemsHTML = "";
 
-    cartData.forEach(item => {
+    cartData.forEach((item) => {
       const art = item.artworks;
       const itemTotal = art.price * item.quantity;
       subtotal += itemTotal;
@@ -110,35 +103,21 @@ function displayOrderSummary() {
     const gst = subtotal * 0.18;
     const total = subtotal + gst;
 
-    console.log("💰 Totals:", {
-      subtotal: subtotal,
-      gst: gst,
-      total: total
-    });
+    console.log("💰 Totals:", { subtotal, gst, total });
 
-    // Update HTML with amounts
     const orderItemsDiv = document.getElementById("orderItems");
-    if (orderItemsDiv) {
-      orderItemsDiv.innerHTML = itemsHTML;
-    }
-    
-    const subtotalEl = document.getElementById("orderSubtotal");
-    if (subtotalEl) {
-      subtotalEl.textContent = "₹" + subtotal.toLocaleString("en-IN");
-    }
-    
-    const gstEl = document.getElementById("orderGst");
-    if (gstEl) {
-      gstEl.textContent = "₹" + gst.toLocaleString("en-IN");
-    }
-    
-    const totalEl = document.getElementById("orderTotal");
-    if (totalEl) {
-      totalEl.textContent = "₹" + total.toLocaleString("en-IN");
-    }
+    if (orderItemsDiv) orderItemsDiv.innerHTML = itemsHTML;
 
-    console.log("✅ Order summary displayed successfully");
-    
+    const subtotalEl = document.getElementById("orderSubtotal");
+    if (subtotalEl) subtotalEl.textContent = "₹" + subtotal.toLocaleString("en-IN");
+
+    const gstEl = document.getElementById("orderGst");
+    if (gstEl) gstEl.textContent = "₹" + gst.toLocaleString("en-IN");
+
+    const totalEl = document.getElementById("orderTotal");
+    if (totalEl) totalEl.textContent = "₹" + total.toLocaleString("en-IN");
+
+    console.log("✅ Order summary displayed");
   } catch (err) {
     console.error("❌ Error displaying order summary:", err);
   }
@@ -159,15 +138,17 @@ async function handleCheckoutSubmit(e) {
       pincode: document.getElementById("pincode").value,
     };
 
-    console.log("✅ User info collected");
-
-    if (!userInfo.name || !userInfo.email || !userInfo.phone || !userInfo.address) {
+    if (
+      !userInfo.name ||
+      !userInfo.email ||
+      !userInfo.phone ||
+      !userInfo.address
+    ) {
       alert("Please fill all required fields");
       return;
     }
 
     await startPayment();
-    
   } catch (err) {
     console.error("❌ Form error:", err);
     alert("Error: " + err.message);
@@ -183,17 +164,18 @@ async function startPayment() {
       return;
     }
 
-    // Calculate amount from cart data
     let subtotal = 0;
-    cartData.forEach(item => {
+    cartData.forEach((item) => {
       subtotal += item.artworks.price * item.quantity;
     });
 
     const gst = subtotal * 0.18;
     const total = subtotal + gst;
-    const amountInPaise = Math.round(total * 100);
 
-    console.log("💰 Payment amount: ₹" + total.toFixed(2));
+    // FIX: Send amount in RUPEES — server.js will multiply by 100 to get paise
+    const amountInRupees = parseFloat(total.toFixed(2));
+
+    console.log("💰 Sending to backend: ₹" + amountInRupees);
 
     const submitBtn = document.querySelector('button[type="submit"]');
     if (submitBtn) {
@@ -201,12 +183,11 @@ async function startPayment() {
       submitBtn.innerText = "Processing...";
     }
 
-    // Create order
     const orderRes = await fetch(`${BACKEND_URL}/create-order`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        amount: amountInPaise,
+        amount: amountInRupees,  // RUPEES — server multiplies by 100
         currency: "INR",
         notes: {
           customer_name: userInfo.name,
@@ -216,18 +197,19 @@ async function startPayment() {
           shipping_city: userInfo.city,
           shipping_state: userInfo.state,
           shipping_pincode: userInfo.pincode,
-        }
-      })
+        },
+      }),
     });
 
     if (!orderRes.ok) {
+      const errBody = await orderRes.text();
+      console.error("Backend response:", errBody);
       throw new Error(`Backend error: ${orderRes.status}`);
     }
 
     const orderData = await orderRes.json();
     console.log("✅ Order created:", orderData.id);
 
-    // Open Razorpay
     const options = {
       key: RAZORPAY_KEY_ID,
       amount: orderData.amount,
@@ -248,7 +230,7 @@ async function startPayment() {
       },
       handler: async function (response) {
         console.log("✅ Payment successful!");
-        
+
         try {
           const verifyRes = await fetch(`${BACKEND_URL}/verify`, {
             method: "POST",
@@ -257,19 +239,22 @@ async function startPayment() {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-            })
+            }),
           });
 
           const result = await verifyRes.json();
           console.log("✅ Verification:", result);
 
           if (result.success) {
-            sessionStorage.setItem("lastOrder", JSON.stringify({
-              orderId: orderData.id,
-              paymentId: response.razorpay_payment_id,
-              amount: orderData.amount,
-              ...userInfo
-            }));
+            sessionStorage.setItem(
+              "lastOrder",
+              JSON.stringify({
+                orderId: orderData.id,
+                paymentId: response.razorpay_payment_id,
+                amount: orderData.amount,
+                ...userInfo,
+              })
+            );
 
             sessionStorage.setItem("paymentSuccess", "true");
 
@@ -285,22 +270,21 @@ async function startPayment() {
         }
       },
       modal: {
-        ondismiss: function() {
+        ondismiss: function () {
           if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.innerText = "Proceed to Payment →";
           }
-        }
-      }
+        },
+      },
     };
 
     const rzp = new Razorpay(options);
     rzp.open();
-
   } catch (err) {
     console.error("❌ Payment error:", err);
     alert("Payment failed: " + err.message);
-    
+
     const submitBtn = document.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -315,11 +299,7 @@ async function clearUserCart() {
     const user = sessionData.session?.user;
 
     if (user) {
-      await supabase
-        .from("cart")
-        .delete()
-        .eq("user_id", user.id);
-      
+      await supabase.from("cart").delete().eq("user_id", user.id);
       console.log("✅ Cart cleared");
     }
   } catch (err) {
