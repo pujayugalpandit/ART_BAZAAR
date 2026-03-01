@@ -59,7 +59,7 @@ async function loadCheckoutCart(userId) {
     }
 
     if (!data || data.length === 0) {
-      alert("Your cart is empty!");
+      console.log("Your cart is empty!");
       window.location.href = "cart.html";
       return;
     }
