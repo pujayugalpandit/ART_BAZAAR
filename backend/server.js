@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const express = require("express");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
@@ -8,6 +9,11 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Root test route
+app.get("/", (req, res) => {
+  res.send("ART_BAZAAR backend is running 🚀");
+});
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
