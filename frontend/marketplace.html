@@ -7,7 +7,6 @@
 
   <link rel="stylesheet" href="css/styles.css">
 
-  <!-- Supabase client (already in your project) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <script src="js/marketplace.js" defer></script>
@@ -16,17 +15,18 @@
 
   <!-- NAV -->
   <header class="navbar">
-  <div class="logo">🎨 <span>Art Bazaar</span></div>
-  <nav>
-    <a href="index.html" class="nav-home">Home</a>
-    <a href="cart.html" class="cart-link">
-      🛒 <span id="cartCount" class="cart-badge">0</span>
-    </a>
-    <a href="login.html" class="btn-light">Logout</a>
-  </nav>
-</header>
+    <div class="logo">🎨 <span>Art Bazaar</span></div>
+    <nav>
+      <a href="index.html" class="nav-home">Home</a>
+      <a href="cart.html" class="cart-link">
+        🛒 <span id="cartCount" class="cart-badge">0</span>
+      </a>
+      <!-- FIX: Proper logout button with id so JS can call signOut() -->
+      <button id="logoutBtn" class="btn-light">Logout</button>
+    </nav>
+  </header>
+
   <!-- HERO -->
-    
   <section class="market-hero">
     <div class="container">
       <h1>Explore the Marketplace</h1>
@@ -65,8 +65,6 @@
 
   <!-- ART GRID -->
   <section class="art-grid container" id="artGrid" aria-live="polite">
-    
-    
     <!-- JS injects cards here -->
   </section>
 
