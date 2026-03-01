@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", initCheckout);
 async function initCheckout() {
   console.log("🔄 Initializing checkout page...");
   
-  // Check authentication
   const { data: sessionData } = await supabase.auth.getSession();
   const user = sessionData.session?.user;
 
@@ -21,22 +20,17 @@ async function initCheckout() {
 
   console.log("✅ User authenticated:", user.email);
 
-  // Load cart data
   await loadCheckoutCart(user.id);
   
-  // Pre-fill email if form exists
   const emailInput = document.getElementById("email");
   if (emailInput) {
     emailInput.value = user.email;
   }
 
-  // Handle form submission
   const form = document.getElementById("checkout-form");
   if (form) {
     form.addEventListener("submit", handleCheckoutSubmit);
     console.log("✅ Form listener attached");
-  } else {
-    console.warn("⚠️ checkout-form not found");
   }
 }
 
@@ -140,7 +134,6 @@ async function handleCheckoutSubmit(e) {
   console.log("🔄 Checkout form submitted...");
 
   try {
-    // Collect shipping details
     userInfo = {
       name: document.getElementById("name").value,
       email: document.getElementById("email").value,
@@ -153,14 +146,12 @@ async function handleCheckoutSubmit(e) {
 
     console.log("✅ Shipping details collected");
 
-    // Validate required fields
     if (!userInfo.name || !userInfo.email || !userInfo.phone || !userInfo.address) {
       alert("Please fill all required fields");
       console.warn("⚠️ Missing required fields");
       return;
     }
 
-    // Start payment
     await startPayment();
     
   } catch (err) {
@@ -173,7 +164,6 @@ async function startPayment() {
   try {
     console.log("🔄 Starting payment process...");
 
-    // Validate cart data
     if (!cartData || cartData.length === 0) {
       console.error("❌ No cart data available");
       alert("Cart is empty. Please add items before checking out.");
@@ -232,13 +222,15 @@ async function startPayment() {
     if (!orderRes.ok) {
       const errorText = await orderRes.text();
       console.error("❌ Backend error response:", errorText);
-      throw new Error(`Backend error: ${orderRes.status} ${errorText}`);
+      throw new Error(`Backend error: ${orderRes.status}`);
     }
 
     const orderData = await orderRes.json();
     console.log("✅ Order created on backend:", orderData.id);
 
-    // Razorpay payment options
+    // ═══════════════════════════════════════════════════════
+    // RAZORPAY PAYMENT OPTIONS WITH UPI ENABLED
+    // ═══════════════════════════════════════════════════════
     const options = {
       key: RAZORPAY_KEY_ID,
       amount: orderData.amount,
@@ -246,17 +238,32 @@ async function startPayment() {
       name: "Art Bazaar",
       description: "Artwork Purchase",
       order_id: orderData.id,
+      
       prefill: {
         name: userInfo.name,
         email: userInfo.email,
         contact: userInfo.phone,
       },
 
+      // ✅ UPI PAYMENT METHOD CONFIGURATION
+      // This ensures UPI is the primary/only payment method
+      method: {
+        upi: true,         // ✅ ENABLE UPI PAYMENT
+        netbanking: false, // Disable other methods (optional)
+        card: false,       // Users can still use cards if Razorpay shows them
+        wallet: false,     // But UPI will be highlighted
+      },
+      // ═══════════════════════════════════════════════════════
+
       handler: async function (response) {
-        console.log("🔄 Payment successful, verifying...", response);
+        console.log("✅ Payment successful!", response);
+        console.log("Payment ID:", response.razorpay_payment_id);
+        console.log("Order ID:", response.razorpay_order_id);
         
         try {
           // Payment successful - verify on backend
+          console.log("🔄 Verifying payment on backend...");
+          
           const verifyRes = await fetch(`${BACKEND_URL}/verify`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -281,25 +288,39 @@ async function startPayment() {
               orderId: orderData.id,
               paymentId: response.razorpay_payment_id,
               amount: orderData.amount,
+              paymentMethod: "UPI",
               ...userInfo
             }));
 
             console.log("✅ Payment verified and cart cleared");
-            alert("Payment successful! Redirecting...");
+            alert("Payment successful! Thank you for your purchase!");
             window.location.href = "success.html";
           } else {
             console.error("❌ Verification failed:", result);
             alert("Payment verification failed. Please contact support.");
+            
+            // Re-enable button on failure
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerText = "Proceed to Payment →";
+            }
           }
         } catch (verifyErr) {
           console.error("❌ Verification error:", verifyErr);
-          alert("Error verifying payment. Please contact support.");
+          alert("Error verifying payment. Please contact support with Payment ID: " + response.razorpay_payment_id);
+          
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Proceed to Payment →";
+          }
         }
       },
 
+      // Handle payment modal close
       modal: {
         ondismiss: function() {
-          console.log("⚠️ Payment modal closed by user");
+          console.log("⚠️ User closed payment modal without paying");
+          
           // Re-enable button
           if (submitBtn) {
             submitBtn.disabled = false;
@@ -309,18 +330,17 @@ async function startPayment() {
       }
     };
 
-    console.log("🔄 Opening Razorpay modal...");
+    console.log("🔄 Opening Razorpay payment modal with UPI...");
     const rzp = new Razorpay(options);
     rzp.open();
 
   } catch (err) {
     console.error("❌ Payment error:", err);
     console.error("Error message:", err.message);
-    console.error("Error stack:", err.stack);
     
     alert("Payment failed: " + err.message);
     
-    // Re-enable button
+    // Re-enable button on error
     const submitBtn = document.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
