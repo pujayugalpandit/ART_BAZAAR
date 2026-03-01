@@ -1,22 +1,37 @@
 document.addEventListener("DOMContentLoaded", initMarketplace);
 
+let allArtworks = []; // store all artworks globally for client-side filtering
+
 /* ================= INIT ================= */
 
 async function initMarketplace() {
-  await setupAuth();
+  await setupNavbar();
   await loadCartCount();
   await loadArtworks();
+  setupFilters();
+  setupLogout();
 }
 
-/* ================= AUTH ================= */
+/* ================= LOGOUT FIX ================= */
+
+function setupLogout() {
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "login.html";
+    });
+  }
+}
+
+/* ================= AUTH / NAVBAR ================= */
 
 async function setupNavbar() {
   const { data: sessionData } = await supabase.auth.getSession();
   const user = sessionData.session?.user;
 
   const homeLink = document.querySelector(".nav-home");
-
-  if (!user) return;
+  if (!user || !homeLink) return;
 
   const { data: userData } = await supabase
     .from("users")
@@ -38,7 +53,6 @@ async function setupNavbar() {
 /* ================= CART COUNT ================= */
 
 async function loadCartCount() {
-  
   const { data: sessionData } = await supabase.auth.getSession();
   const user = sessionData.session?.user;
   if (!user) return;
@@ -48,8 +62,8 @@ async function loadCartCount() {
     .select("quantity")
     .eq("user_id", user.id);
   if (!data) return;
-const totalItems = data.reduce((sum, item) => sum + item.quantity, 0);
 
+  const totalItems = data.reduce((sum, item) => sum + item.quantity, 0);
   const badge = document.getElementById("cartCount");
   if (badge) badge.innerText = totalItems;
 }
@@ -57,37 +71,134 @@ const totalItems = data.reduce((sum, item) => sum + item.quantity, 0);
 /* ================= LOAD ARTWORKS ================= */
 
 async function loadArtworks() {
-
-  const { data, error } = await supabase
-    .from("artworks")
-    .select("*");
+  const { data, error } = await supabase.from("artworks").select("*");
 
   if (error) {
     console.error(error);
     return;
   }
 
+  allArtworks = data || [];
+  renderArtworks(allArtworks);
+}
+
+/* ================= RENDER ARTWORKS ================= */
+
+function renderArtworks(artworks) {
   const grid = document.getElementById("artGrid");
+  const resultsCount = document.getElementById("resultsCount");
+
   grid.innerHTML = "";
 
-  data.forEach(art => {
+  if (!artworks || artworks.length === 0) {
+    grid.innerHTML = `<p style="color:#888; padding:20px;">No artworks found matching your filters.</p>`;
+    if (resultsCount) resultsCount.textContent = "Showing 0 artworks";
+    return;
+  }
+
+  if (resultsCount) {
+    resultsCount.textContent = `Showing ${artworks.length} artwork${artworks.length !== 1 ? "s" : ""}`;
+  }
+
+  artworks.forEach((art) => {
     grid.innerHTML += `
       <div class="art-card">
-        <img src="${art.image_url}" />
-        <h3>${art.title}</h3>
-        <p>₹${Number(art.price).toLocaleString("en-IN")}</p>
-        <button class="add-cart-btn" data-id="${art.id}">
-          Add to Cart
-        </button>
+        <div class="image-wrapper">
+          <img src="${art.image_url}" alt="${art.title}" onerror="this.src='https://via.placeholder.com/300x240?text=No+Image'" />
+        </div>
+        <div class="art-content">
+          <span class="category-tag">${art.category || "Art"}</span>
+          <div class="art-title">${art.title}</div>
+          <div class="art-artist">by ${art.artist_name || "Unknown Artist"}</div>
+          <div class="price">₹${Number(art.price).toLocaleString("en-IN")}</div>
+          <button class="add-cart-btn" data-id="${art.id}">Add to Cart</button>
+        </div>
       </div>
     `;
   });
 }
 
+/* ================= FILTER SETUP (BUG FIX) ================= */
+
+function setupFilters() {
+  const searchInput = document.getElementById("searchInput");
+  const categorySelect = document.getElementById("categorySelect");
+  const priceRange = document.getElementById("priceRange");
+  const priceValue = document.getElementById("priceValue");
+  const priceMinus = document.getElementById("priceMinus");
+  const pricePlus = document.getElementById("pricePlus");
+
+  function applyFilters() {
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : "";
+    const selectedCategory = categorySelect ? categorySelect.value : "all";
+    const maxPrice = priceRange ? parseInt(priceRange.value) : 20000;
+
+    // Update price display
+    if (priceValue) {
+      priceValue.textContent = "₹" + maxPrice.toLocaleString("en-IN");
+    }
+
+    const filtered = allArtworks.filter((art) => {
+      const price = Number(art.price);
+      const matchesPrice = price <= maxPrice;
+
+      const matchesCategory =
+        selectedCategory === "all" ||
+        (art.category || "").toLowerCase() === selectedCategory.toLowerCase();
+
+      const matchesSearch =
+        !searchTerm ||
+        (art.title || "").toLowerCase().includes(searchTerm) ||
+        (art.artist_name || "").toLowerCase().includes(searchTerm) ||
+        (art.category || "").toLowerCase().includes(searchTerm);
+
+      return matchesPrice && matchesCategory && matchesSearch;
+    });
+
+    renderArtworks(filtered);
+  }
+
+  if (searchInput) searchInput.addEventListener("input", applyFilters);
+  if (categorySelect) categorySelect.addEventListener("change", applyFilters);
+
+  if (priceRange) {
+    priceRange.addEventListener("input", applyFilters);
+
+    // Initialise display on load
+    if (priceValue) {
+      priceValue.textContent =
+        "₹" + parseInt(priceRange.value).toLocaleString("en-IN");
+    }
+  }
+
+  if (priceMinus) {
+    priceMinus.addEventListener("click", () => {
+      const step = parseInt(priceRange.step) || 500;
+      const newVal = Math.max(
+        parseInt(priceRange.min),
+        parseInt(priceRange.value) - step
+      );
+      priceRange.value = newVal;
+      applyFilters();
+    });
+  }
+
+  if (pricePlus) {
+    pricePlus.addEventListener("click", () => {
+      const step = parseInt(priceRange.step) || 500;
+      const newVal = Math.min(
+        parseInt(priceRange.max),
+        parseInt(priceRange.value) + step
+      );
+      priceRange.value = newVal;
+      applyFilters();
+    });
+  }
+}
+
 /* ================= ADD TO CART (EVENT DELEGATION) ================= */
 
 document.addEventListener("click", async function (e) {
-
   const btn = e.target.closest(".add-cart-btn");
   if (!btn) return;
 
@@ -98,8 +209,12 @@ document.addEventListener("click", async function (e) {
 
   if (!user) {
     alert("Please login first");
+    window.location.href = "login.html";
     return;
   }
+
+  btn.disabled = true;
+  btn.textContent = "Adding...";
 
   // Check existing item
   const { data: existing } = await supabase
@@ -115,20 +230,17 @@ document.addEventListener("click", async function (e) {
       .update({ quantity: existing.quantity + 1 })
       .eq("id", existing.id);
   } else {
-    await supabase
-      .from("cart")
-      .insert({
-        user_id: user.id,
-        artwork_id: artworkId,
-        quantity: 1
-      });
+    await supabase.from("cart").insert({
+      user_id: user.id,
+      artwork_id: artworkId,
+      quantity: 1,
+    });
   }
 
   await loadCartCount();
-  alert("Added to cart!");
-});
-document.addEventListener("DOMContentLoaded", () => {
-  loadArtworks();
-  loadCartCount();
-  setupNavbar();
+  btn.disabled = false;
+  btn.textContent = "✓ Added!";
+  setTimeout(() => {
+    btn.textContent = "Add to Cart";
+  }, 1500);
 });
