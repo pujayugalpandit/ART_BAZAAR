@@ -3,98 +3,682 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checkout - Art Bazaar</title>
-  <link rel="stylesheet" href="css/checkout.css">
+  <title>Checkout — Art Bazaar</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --purple: #7b2ff7;
+      --pink: #f107a3;
+      --gradient: linear-gradient(135deg, #7b2ff7, #f107a3);
+      --dark: #0e0e12;
+      --light-bg: #f8f7ff;
+      --text: #0e0e12;
+      --muted: #6b6b80;
+      --border: #ebebf5;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #faf9ff;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: sticky;
+      top: 0; z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 40px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .logo-icon {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: var(--gradient);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+    }
+
+    .logo span {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--purple);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(123,47,247,0.2);
+      transition: all 0.2s;
+    }
+
+    .back-link:hover {
+      background: rgba(123,47,247,0.06);
+      border-color: var(--purple);
+    }
+
+    /* ── PROGRESS STEPS ── */
+    .progress-bar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 16px 40px;
+    }
+
+    .steps-track {
+      max-width: 1040px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .step-item.done { color: var(--purple); }
+    .step-item.active { color: var(--text); }
+
+    .step-dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      background: white;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .step-item.done .step-dot {
+      background: var(--gradient);
+      border-color: transparent;
+      color: white;
+    }
+
+    .step-item.active .step-dot {
+      background: var(--gradient);
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 0 0 4px rgba(123,47,247,0.15);
+    }
+
+    .step-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      margin: 0 12px;
+      min-width: 40px;
+    }
+
+    .step-line.done { background: var(--gradient); }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--dark);
+      padding: 44px 40px 56px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(123,47,247,0.4), transparent 65%);
+      top: -100px; right: 0;
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(241,7,163,0.28), transparent 65%);
+      bottom: -50px; left: 8%;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative; z-index: 1;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.65);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(30px, 4vw, 48px);
+      font-weight: 700;
+      color: white;
+      line-height: 1.15;
+      margin-bottom: 8px;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: rgba(255,255,255,0.5);
+      font-size: 15px;
+    }
+
+    /* ── PAGE LAYOUT ── */
+    .page-container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 36px 40px 80px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    /* ── SHIPPING FORM CARD ── */
+    .shipping-section {
+      background: white;
+      border-radius: 20px;
+      padding: 32px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 28px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title .title-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: rgba(123,47,247,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+    }
+
+    /* ── FORM FIELDS ── */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 7px;
+      letter-spacing: 0.2px;
+    }
+
+    .form-group label .required {
+      color: var(--pink);
+      margin-left: 2px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid #e8e8f0;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      background: #fafafa;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(123,47,247,0.1);
+      background: white;
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: #bbb;
+    }
+
+    .form-group textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Input with icon */
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      pointer-events: none;
+    }
+
+    .input-wrapper input {
+      padding-left: 42px;
+    }
+
+    /* ── PAY BUTTON ── */
+    .pay-btn {
+      width: 100%;
+      padding: 16px;
+      margin-top: 8px;
+      background: var(--gradient);
+      border: none;
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 13px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 24px rgba(123,47,247,0.28);
+      letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .pay-btn:hover {
+      opacity: 0.93;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(123,47,247,0.36);
+    }
+
+    .pay-btn:active { transform: translateY(0); }
+
+    .pay-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ── ORDER SUMMARY CARD ── */
+    .order-summary-section {
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+      position: sticky;
+      top: 88px;
+    }
+
+    .order-summary-section .section-title {
+      margin-bottom: 20px;
+    }
+
+    /* Order items list */
+    .order-items {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      padding-right: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: #d8b4fe #f1f1f1;
+    }
+
+    .order-items::-webkit-scrollbar { width: 5px; }
+    .order-items::-webkit-scrollbar-track { background: #f5f5fb; border-radius: 10px; }
+    .order-items::-webkit-scrollbar-thumb { background: #d8b4fe; border-radius: 10px; }
+
+    .order-item {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f5f5fb;
+      align-items: center;
+    }
+
+    .order-item:last-child { border-bottom: none; }
+
+    .order-item img {
+      width: 64px; height: 64px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .order-item h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 3px;
+      line-height: 1.3;
+    }
+
+    .order-item p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .order-item strong {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--purple);
+      white-space: nowrap;
+    }
+
+    /* Summary rows */
+    .summary-rows { margin-top: 4px; }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      font-size: 14px;
+      color: var(--muted);
+      border-top: 1px solid #f5f5fb;
+    }
+
+    .row:first-child { border-top: none; }
+
+    .row span:last-child {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .row.total {
+      padding: 16px 0 0;
+      margin-top: 4px;
+      border-top: 2px solid var(--border) !important;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .row.total span:last-child {
+      font-size: 20px;
+      font-weight: 800;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Trust badges */
+    .trust-badges {
+      display: flex;
+      gap: 10px;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      background: var(--light-bg);
+      padding: 5px 10px;
+      border-radius: 100px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 860px) {
+      .page-container {
+        grid-template-columns: 1fr;
+        padding: 24px 20px 60px;
+      }
+      .order-summary-section { position: relative; top: 0; }
+      .progress-bar { padding: 14px 20px; }
+    }
+
+    @media (max-width: 560px) {
+      .navbar { padding: 12px 20px; }
+      .hero { padding: 32px 20px 44px; }
+      .shipping-section { padding: 22px 18px; }
+      .form-row { grid-template-columns: 1fr; gap: 0; }
+    }
+
+    @media (max-width: 480px) {
+      .steps-track .step-item span { display: none; }
+    }
+  </style>
 </head>
+
 <body>
 
-<header class="navbar">
-  <div class="logo">🎨 <span>Art Bazaar</span></div>
-  <a href="cart.html" class="back-link">← Back to Cart</a>
-</header>
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <a href="index.html" class="logo">
+      <div class="logo-icon">🎨</div>
+      <span>Art Bazaar</span>
+    </a>
+    <a href="cart.html" class="back-link">← Back to Cart</a>
+  </header>
 
-<section class="hero">
-  <h1>Checkout</h1>
-</section>
-
-<div class="container checkout-container">
-  
-  <div class="shipping-section">
-    <h2>Shipping Details</h2>
-    
-    <form id="checkout-form">
-      <div class="form-group">
-        <label for="name">Full Name *</label>
-        <input type="text" id="name" name="name" required>
+  <!-- PROGRESS STEPS -->
+  <div class="progress-bar">
+    <div class="steps-track">
+      <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span>Cart</span>
       </div>
-
-      <div class="form-group">
-        <label for="email">Email *</label>
-        <input type="email" id="email" name="email" required>
+      <div class="step-line done"></div>
+      <div class="step-item active">
+        <div class="step-dot">2</div>
+        <span>Shipping</span>
       </div>
-
-      <div class="form-group">
-        <label for="phone">Phone Number *</label>
-        <input type="tel" id="phone" name="phone" required pattern="[0-9]{10}" placeholder="10 digit number">
+      <div class="step-line"></div>
+      <div class="step-item">
+        <div class="step-dot">3</div>
+        <span>Payment</span>
       </div>
-
-      <div class="form-group">
-        <label for="address">Address *</label>
-        <textarea id="address" name="address" required placeholder="Street address, building, etc."></textarea>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="city">City *</label>
-          <input type="text" id="city" name="city" required>
-        </div>
-
-        <div class="form-group">
-          <label for="state">State *</label>
-          <input type="text" id="state" name="state" required>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="pincode">Pincode *</label>
-        <input type="text" id="pincode" name="pincode" required pattern="[0-9]{6}" placeholder="6 digit pincode">
-      </div>
-
-      <button type="submit" class="pay-btn">
-        Proceed to Payment →
-      </button>
-    </form>
-  </div>
-
-  <div class="order-summary-section">
-    <h2>Order Summary</h2>
-    
-    <div id="orderItems" class="order-items"></div>
-    
-    <div class="summary-rows">
-      <div class="row">
-        <span>Subtotal</span>
-        <span id="orderSubtotal">₹0.00</span>
-      </div>
-
-      <div class="row">
-        <span>GST (18%)</span>
-        <span id="orderGst">₹0.00</span>
-      </div>
-
-      <div class="row total">
-        <span>Total Amount</span>
-        <span id="orderTotal">₹0.00</span>
+      <div class="step-line"></div>
+      <div class="step-item">
+        <div class="step-dot">4</div>
+        <span>Confirmed</span>
       </div>
     </div>
   </div>
 
-</div>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-eyebrow">💳 Secure Checkout</div>
+      <h1>Almost <em>There!</em></h1>
+      <p>Fill in your shipping details to complete your order.</p>
+    </div>
+  </section>
 
-<script src="js/checkout.js" defer></script>
+  <!-- MAIN CONTENT -->
+  <div class="page-container">
+
+    <!-- LEFT: Shipping Form -->
+    <div class="shipping-section">
+      <div class="section-title">
+        <div class="title-icon">📦</div>
+        <span>Shipping Details</span>
+      </div>
+
+      <form id="checkout-form">
+
+        <div class="form-group">
+          <label for="name">Full Name <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input type="text" id="name" name="name" placeholder="Your full name" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <span class="input-icon">✉️</span>
+            <input type="email" id="email" name="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <span class="input-icon">📱</span>
+            <input type="tel" id="phone" name="phone" required pattern="[0-9]{10}" placeholder="10 digit mobile number">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Street Address <span class="required">*</span></label>
+          <textarea id="address" name="address" required placeholder="House/flat number, street name, landmark…"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="city">City <span class="required">*</span></label>
+            <input type="text" id="city" name="city" placeholder="Mumbai" required>
+          </div>
+
+          <div class="form-group">
+            <label for="state">State <span class="required">*</span></label>
+            <input type="text" id="state" name="state" placeholder="Maharashtra" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="pincode">Pincode <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <span class="input-icon">📮</span>
+            <input type="text" id="pincode" name="pincode" required pattern="[0-9]{6}" placeholder="6 digit pincode">
+          </div>
+        </div>
+
+        <button type="submit" class="pay-btn">
+          🔒 Proceed to Payment
+        </button>
+
+      </form>
+    </div>
+
+    <!-- RIGHT: Order Summary -->
+    <div class="order-summary-section">
+      <div class="section-title">
+        <div class="title-icon">🧾</div>
+        <span>Order Summary</span>
+      </div>
+
+      <div id="orderItems" class="order-items">
+        <!-- JS injects items here -->
+      </div>
+
+      <div class="summary-rows">
+        <div class="row">
+          <span>Subtotal</span>
+          <span id="orderSubtotal">₹0.00</span>
+        </div>
+
+        <div class="row">
+          <span>GST (18%)</span>
+          <span id="orderGst">₹0.00</span>
+        </div>
+
+        <div class="row total">
+          <span>Total Amount</span>
+          <span id="orderTotal">₹0.00</span>
+        </div>
+      </div>
+
+      <!-- Trust badges -->
+      <div class="trust-badges">
+        <div class="badge">🔒 Razorpay Secured</div>
+        <div class="badge">✅ Safe Checkout</div>
+        <div class="badge">🚚 Free Delivery</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/checkout.js" defer></script>
 
 </body>
 </html>
