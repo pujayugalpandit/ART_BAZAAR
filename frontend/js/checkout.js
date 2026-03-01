@@ -20,6 +20,7 @@ async function initCheckout() {
 
   console.log("✅ User authenticated:", user.email);
 
+  // IMPORTANT: Load cart FIRST before everything else
   await loadCheckoutCart(user.id);
   
   const emailInput = document.getElementById("email");
@@ -36,7 +37,7 @@ async function initCheckout() {
 
 async function loadCheckoutCart(userId) {
   try {
-    console.log("🔄 Loading cart data...");
+    console.log("🔄 Loading cart data for user:", userId);
     
     const { data, error } = await supabase
       .from("cart")
@@ -66,12 +67,14 @@ async function loadCheckoutCart(userId) {
     }
 
     cartData = data;
-    console.log("✅ Cart loaded successfully:", data.length, "items");
+    console.log("✅ Cart loaded:", data.length, "items");
+    console.log("📦 Cart data:", cartData);
+    
+    // IMPORTANT: Display summary AFTER loading cart
     displayOrderSummary();
     
   } catch (err) {
-    console.error("❌ Unexpected error loading cart:", err);
-    alert("Failed to load cart. Please try again.");
+    console.error("❌ Error loading cart:", err);
   }
 }
 
@@ -79,6 +82,11 @@ function displayOrderSummary() {
   try {
     console.log("🔄 Displaying order summary...");
     
+    if (!cartData || cartData.length === 0) {
+      console.error("❌ No cart data to display");
+      return;
+    }
+
     let subtotal = 0;
     let itemsHTML = "";
 
@@ -102,27 +110,34 @@ function displayOrderSummary() {
     const gst = subtotal * 0.18;
     const total = subtotal + gst;
 
+    console.log("💰 Totals:", {
+      subtotal: subtotal,
+      gst: gst,
+      total: total
+    });
+
+    // Update HTML with amounts
     const orderItemsDiv = document.getElementById("orderItems");
     if (orderItemsDiv) {
       orderItemsDiv.innerHTML = itemsHTML;
     }
     
-    const subtotalSpan = document.getElementById("orderSubtotal");
-    if (subtotalSpan) {
-      subtotalSpan.innerText = "₹" + subtotal.toLocaleString("en-IN");
+    const subtotalEl = document.getElementById("orderSubtotal");
+    if (subtotalEl) {
+      subtotalEl.textContent = "₹" + subtotal.toLocaleString("en-IN");
     }
     
-    const gstSpan = document.getElementById("orderGst");
-    if (gstSpan) {
-      gstSpan.innerText = "₹" + gst.toLocaleString("en-IN");
+    const gstEl = document.getElementById("orderGst");
+    if (gstEl) {
+      gstEl.textContent = "₹" + gst.toLocaleString("en-IN");
     }
     
-    const totalSpan = document.getElementById("orderTotal");
-    if (totalSpan) {
-      totalSpan.innerText = "₹" + total.toLocaleString("en-IN");
+    const totalEl = document.getElementById("orderTotal");
+    if (totalEl) {
+      totalEl.textContent = "₹" + total.toLocaleString("en-IN");
     }
 
-    console.log("✅ Order summary displayed. Total: ₹" + total.toFixed(2));
+    console.log("✅ Order summary displayed successfully");
     
   } catch (err) {
     console.error("❌ Error displaying order summary:", err);
@@ -131,7 +146,7 @@ function displayOrderSummary() {
 
 async function handleCheckoutSubmit(e) {
   e.preventDefault();
-  console.log("🔄 Checkout form submitted...");
+  console.log("🔄 Checkout form submitted");
 
   try {
     userInfo = {
@@ -144,29 +159,27 @@ async function handleCheckoutSubmit(e) {
       pincode: document.getElementById("pincode").value,
     };
 
-    console.log("✅ Shipping details collected");
+    console.log("✅ User info collected");
 
     if (!userInfo.name || !userInfo.email || !userInfo.phone || !userInfo.address) {
       alert("Please fill all required fields");
-      console.warn("⚠️ Missing required fields");
       return;
     }
 
     await startPayment();
     
   } catch (err) {
-    console.error("❌ Error in checkout form submission:", err);
-    alert("An error occurred. Please try again.");
+    console.error("❌ Form error:", err);
+    alert("Error: " + err.message);
   }
 }
 
 async function startPayment() {
   try {
-    console.log("🔄 Starting payment process...");
+    console.log("🔄 Starting payment...");
 
     if (!cartData || cartData.length === 0) {
-      console.error("❌ No cart data available");
-      alert("Cart is empty. Please add items before checking out.");
+      alert("Cart is empty!");
       return;
     }
 
@@ -180,28 +193,18 @@ async function startPayment() {
     const total = subtotal + gst;
     const amountInPaise = Math.round(total * 100);
 
-    console.log("💰 Amount calculation:", {
-      subtotal: subtotal,
-      gst: gst,
-      total: total,
-      amountInPaise: amountInPaise
-    });
+    console.log("💰 Payment amount: ₹" + total.toFixed(2));
 
-    // Show loading state
     const submitBtn = document.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.innerText = "Processing...";
     }
 
-    // Create order on backend
-    console.log("🔄 Creating order on backend:", BACKEND_URL);
-    
+    // Create order
     const orderRes = await fetch(`${BACKEND_URL}/create-order`, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         amount: amountInPaise,
         currency: "INR",
@@ -217,20 +220,14 @@ async function startPayment() {
       })
     });
 
-    console.log("📡 Backend response status:", orderRes.status);
-
     if (!orderRes.ok) {
-      const errorText = await orderRes.text();
-      console.error("❌ Backend error response:", errorText);
       throw new Error(`Backend error: ${orderRes.status}`);
     }
 
     const orderData = await orderRes.json();
-    console.log("✅ Order created on backend:", orderData.id);
+    console.log("✅ Order created:", orderData.id);
 
-    // ═══════════════════════════════════════════════════════
-    // RAZORPAY PAYMENT OPTIONS WITH UPI ENABLED
-    // ═══════════════════════════════════════════════════════
+    // Open Razorpay
     const options = {
       key: RAZORPAY_KEY_ID,
       amount: orderData.amount,
@@ -238,30 +235,21 @@ async function startPayment() {
       name: "Art Bazaar",
       description: "Artwork Purchase",
       order_id: orderData.id,
-      
       prefill: {
         name: userInfo.name,
         email: userInfo.email,
         contact: userInfo.phone,
       },
-
-      // ✅ UPI PAYMENT METHOD CONFIGURATION
       method: {
         upi: true,
         netbanking: false,
         card: false,
         wallet: false,
       },
-
       handler: async function (response) {
-        console.log("✅ Payment successful!", response);
-        console.log("Payment ID:", response.razorpay_payment_id);
-        console.log("Order ID:", response.razorpay_order_id);
+        console.log("✅ Payment successful!");
         
         try {
-          // Payment successful - verify on backend
-          console.log("🔄 Verifying payment on backend...");
-          
           const verifyRes = await fetch(`${BACKEND_URL}/verify`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -272,63 +260,32 @@ async function startPayment() {
             })
           });
 
-          console.log("📡 Verification response status:", verifyRes.status);
-
           const result = await verifyRes.json();
-          console.log("✅ Verification result:", result);
+          console.log("✅ Verification:", result);
 
           if (result.success) {
-            // Store order info in session BEFORE clearing cart
             sessionStorage.setItem("lastOrder", JSON.stringify({
               orderId: orderData.id,
               paymentId: response.razorpay_payment_id,
               amount: orderData.amount,
-              paymentMethod: "UPI",
               ...userInfo
             }));
 
-            // ✅ SET FLAG: Tell cart.js that payment was successful
-            // This prevents the "cart is empty" popup from showing
             sessionStorage.setItem("paymentSuccess", "true");
 
-            console.log("✅ Order info stored");
-            console.log("✅ Payment success flag set");
-
-            // Clear cart AFTER storing order info
             await clearUserCart();
-            
-            console.log("✅ Payment verified and cart cleared");
-            
-            // Redirect immediately without alert
             console.log("🔄 Redirecting to success page...");
             window.location.href = "success.html";
           } else {
-            console.error("❌ Verification failed:", result);
-            alert("Payment verification failed. Please contact support.");
-            
-            // Re-enable button on failure
-            if (submitBtn) {
-              submitBtn.disabled = false;
-              submitBtn.innerText = "Proceed to Payment →";
-            }
+            alert("Verification failed");
           }
-        } catch (verifyErr) {
-          console.error("❌ Verification error:", verifyErr);
-          alert("Error verifying payment. Please contact support with Payment ID: " + response.razorpay_payment_id);
-          
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Proceed to Payment →";
-          }
+        } catch (err) {
+          console.error("Verification error:", err);
+          alert("Error verifying payment");
         }
       },
-
-      // Handle payment modal close
       modal: {
         ondismiss: function() {
-          console.log("⚠️ User closed payment modal without paying");
-          
-          // Re-enable button
           if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.innerText = "Proceed to Payment →";
@@ -337,17 +294,13 @@ async function startPayment() {
       }
     };
 
-    console.log("🔄 Opening Razorpay payment modal with UPI...");
     const rzp = new Razorpay(options);
     rzp.open();
 
   } catch (err) {
     console.error("❌ Payment error:", err);
-    console.error("Error message:", err.message);
-    
     alert("Payment failed: " + err.message);
     
-    // Re-enable button on error
     const submitBtn = document.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -367,18 +320,9 @@ async function clearUserCart() {
         .delete()
         .eq("user_id", user.id);
       
-      console.log("✅ Cart cleared for user:", user.id);
+      console.log("✅ Cart cleared");
     }
   } catch (err) {
-    console.error("❌ Error clearing cart:", err);
-    // Don't throw error - cart clearing is not critical for success
+    console.error("Cart clear error:", err);
   }
 }
-
-// Export for testing
-window.startPayment = startPayment;
-<<<<<<< HEAD
-window.handleCheckoutSubmit = handleCheckoutSubmit;
-=======
-window.handleCheckoutSubmit = handleCheckoutSubmit;
->>>>>>> 970fbc01da9657db16051d944084a5b6bfeace17
