@@ -176,10 +176,17 @@ async function loadCartCount() {
   const badge = document.getElementById("cartCount");
   if (badge) badge.innerText = count;
 }
+
+/* ================= CHECKOUT BUTTON ================= */
+
 document.addEventListener("DOMContentLoaded", () => {
   const checkoutBtn = document.querySelector(".checkout-btn");
 
   if (checkoutBtn) {
-    checkoutBtn.addEventListener("click", startPayment);
+    checkoutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      // Navigate to checkout page to collect shipping details
+      window.location.href = "checkout.html";
+    });
   }
 });
