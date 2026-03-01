@@ -178,7 +178,7 @@ async function startPayment() {
 
     const gst = subtotal * 0.18;
     const total = subtotal + gst;
-    const amountInPaise = Math.round(total * 100); // Convert to paise
+    const amountInPaise = Math.round(total * 100);
 
     console.log("💰 Amount calculation:", {
       subtotal: subtotal,
@@ -246,14 +246,12 @@ async function startPayment() {
       },
 
       // ✅ UPI PAYMENT METHOD CONFIGURATION
-      // This ensures UPI is the primary/only payment method
       method: {
-        upi: true,         // ✅ ENABLE UPI PAYMENT
-        netbanking: false, // Disable other methods (optional)
-        card: false,       // Users can still use cards if Razorpay shows them
-        wallet: false,     // But UPI will be highlighted
+        upi: true,
+        netbanking: false,
+        card: false,
+        wallet: false,
       },
-      // ═══════════════════════════════════════════════════════
 
       handler: async function (response) {
         console.log("✅ Payment successful!", response);
@@ -280,10 +278,7 @@ async function startPayment() {
           console.log("✅ Verification result:", result);
 
           if (result.success) {
-            // Clear cart after successful payment
-            await clearUserCart();
-            
-            // Store order info in session
+            // Store order info in session BEFORE clearing cart
             sessionStorage.setItem("lastOrder", JSON.stringify({
               orderId: orderData.id,
               paymentId: response.razorpay_payment_id,
@@ -292,8 +287,15 @@ async function startPayment() {
               ...userInfo
             }));
 
+            console.log("✅ Order info stored");
+
+            // Clear cart AFTER storing order info
+            await clearUserCart();
+            
             console.log("✅ Payment verified and cart cleared");
-            alert("Payment successful! Thank you for your purchase!");
+            
+            // Redirect immediately without alert
+            console.log("🔄 Redirecting to success page...");
             window.location.href = "success.html";
           } else {
             console.error("❌ Verification failed:", result);
@@ -364,6 +366,7 @@ async function clearUserCart() {
     }
   } catch (err) {
     console.error("❌ Error clearing cart:", err);
+    // Don't throw error - cart clearing is not critical for success
   }
 }
 
