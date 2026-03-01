@@ -377,4 +377,8 @@ async function clearUserCart() {
 
 // Export for testing
 window.startPayment = startPayment;
+<<<<<<< HEAD
 window.handleCheckoutSubmit = handleCheckoutSubmit;
+=======
+window.handleCheckoutSubmit = handleCheckoutSubmit;
+>>>>>>> 970fbc01da9657db16051d944084a5b6bfeace17

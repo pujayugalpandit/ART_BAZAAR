@@ -1,16 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Checkout</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - Art Bazaar</title>
+  <link rel="stylesheet" href="css/checkout.css">
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
-  <script src="js/checkout.js" defer></script>
 </head>
 <body>
 
-<h2>Checkout</h2>
-<button onclick="startPayment()">Pay Now</button>
+<header class="navbar">
+  <div class="logo">🎨 <span>Art Bazaar</span></div>
+  <a href="cart.html" class="back-link">← Back to Cart</a>
+</header>
+
+<section class="hero">
+  <h1>Checkout</h1>
+</section>
+
+<div class="container checkout-container">
+  
+  <div class="shipping-section">
+    <h2>Shipping Details</h2>
+    
+    <form id="checkout-form">
+      <div class="form-group">
+        <label for="name">Full Name *</label>
+        <input type="text" id="name" name="name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number *</label>
+        <input type="tel" id="phone" name="phone" required pattern="[0-9]{10}" placeholder="10 digit number">
+      </div>
+
+      <div class="form-group">
+        <label for="address">Address *</label>
+        <textarea id="address" name="address" required placeholder="Street address, building, etc."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="city">City *</label>
+          <input type="text" id="city" name="city" required>
+        </div>
+
+        <div class="form-group">
+          <label for="state">State *</label>
+          <input type="text" id="state" name="state" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="pincode">Pincode *</label>
+        <input type="text" id="pincode" name="pincode" required pattern="[0-9]{6}" placeholder="6 digit pincode">
+      </div>
+
+      <button type="submit" class="pay-btn">
+        Proceed to Payment →
+      </button>
+    </form>
+  </div>
+
+  <div class="order-summary-section">
+    <h2>Order Summary</h2>
+    
+    <div id="orderItems" class="order-items"></div>
+    
+    <div class="summary-rows">
+      <div class="row">
+        <span>Subtotal</span>
+        <span id="orderSubtotal">₹0.00</span>
+      </div>
+
+      <div class="row">
+        <span>GST (18%)</span>
+        <span id="orderGst">₹0.00</span>
+      </div>
+
+      <div class="row total">
+        <span>Total Amount</span>
+        <span id="orderTotal">₹0.00</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/checkout.js" defer></script>
 
 </body>
 </html>
