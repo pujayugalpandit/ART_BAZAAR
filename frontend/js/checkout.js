@@ -59,7 +59,8 @@ async function loadCheckoutCart(userId) {
     }
 
     if (!data || data.length === 0) {
-      console.log("Your cart is empty!");
+      console.warn("⚠️ Cart is empty");
+      alert("Your cart is empty!");
       window.location.href = "cart.html";
       return;
     }
@@ -286,7 +287,12 @@ async function startPayment() {
               ...userInfo
             }));
 
+            // ✅ SET FLAG: Tell cart.js that payment was successful
+            // This prevents the "cart is empty" popup from showing
+            sessionStorage.setItem("paymentSuccess", "true");
+
             console.log("✅ Order info stored");
+            console.log("✅ Payment success flag set");
 
             // Clear cart AFTER storing order info
             await clearUserCart();
