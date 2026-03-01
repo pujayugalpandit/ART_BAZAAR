@@ -1,66 +1,525 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shopping Cart</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart — Art Bazaar</title>
 
-<link rel="stylesheet" href="css/cart.css">
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="js/cart.js" defer></script>
-<script src="js/checkout.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --purple: #7b2ff7;
+      --pink: #f107a3;
+      --gradient: linear-gradient(135deg, #7b2ff7, #f107a3);
+      --dark: #0e0e12;
+      --light-bg: #f8f7ff;
+      --text: #0e0e12;
+      --muted: #6b6b80;
+      --border: #ebebf5;
+      --white: #ffffff;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #faf9ff;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: sticky;
+      top: 0; z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 40px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .logo-icon {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: var(--gradient);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+    }
+
+    .logo span {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-right a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-right a:hover { color: var(--text); }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--purple) !important;
+      font-weight: 600 !important;
+    }
+
+    .back-link::before { content: '←'; }
+
+    .cart-self {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--light-bg);
+      border: 1px solid rgba(123,47,247,0.15);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: 600 !important;
+      color: var(--text) !important;
+    }
+
+    .cart-badge {
+      background: var(--gradient);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 100px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--dark);
+      padding: 48px 40px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(123,47,247,0.4), transparent 65%);
+      top: -100px; right: 0;
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(241,7,163,0.3), transparent 65%);
+      bottom: -60px; left: 8%;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative; z-index: 1;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.65);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 700;
+      color: white;
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: rgba(255,255,255,0.55);
+      font-size: 16px;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .page-container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 36px 40px 80px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    /* ── CART ITEMS COLUMN ── */
+    .cart-column h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    /* ── CART CARD ── */
+    .cart-card {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .cart-card:hover {
+      box-shadow: 0 8px 28px rgba(123,47,247,0.09);
+      transform: translateY(-2px);
+    }
+
+    .cart-card img {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 12px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .cart-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .cart-details h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cart-details .unit-price {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .qty-price {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Quantity stepper */
+    .qty {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .qty button {
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: var(--light-bg);
+      color: var(--purple);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qty button:hover { background: rgba(123,47,247,0.12); }
+
+    .qty span {
+      width: 40px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      border-left: 1.5px solid var(--border);
+      border-right: 1.5px solid var(--border);
+      line-height: 34px;
+    }
+
+    /* Item price */
+    .price {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--purple);
+    }
+
+    /* Remove button */
+    .remove-btn {
+      margin-left: auto;
+      width: 34px; height: 34px;
+      border: none;
+      background: #fff0f0;
+      color: #ef4444;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .remove-btn:hover {
+      background: #ffe0e0;
+      transform: scale(1.08);
+    }
+
+    /* ── ORDER SUMMARY ── */
+    .summary {
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 88px;
+    }
+
+    .summary h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .row span:last-child {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .row + .row {
+      border-top: 1px solid #f5f5fb;
+    }
+
+    .row.total {
+      padding: 16px 0 0;
+      margin-top: 8px;
+      border-top: 2px solid var(--border) !important;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .row.total span:last-child {
+      font-size: 20px;
+      font-weight: 800;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Divider */
+    .summary-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0 12px;
+    }
+
+    /* Checkout button */
+    .checkout-btn {
+      width: 100%;
+      padding: 15px;
+      margin-top: 22px;
+      background: var(--gradient);
+      border: none;
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+      box-shadow: 0 8px 24px rgba(123,47,247,0.28);
+      letter-spacing: 0.2px;
+    }
+
+    .checkout-btn:hover {
+      opacity: 0.93;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(123,47,247,0.36);
+    }
+
+    .checkout-btn:active { transform: translateY(0); }
+
+    /* Security note */
+    .secure-note {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 860px) {
+      .page-container {
+        grid-template-columns: 1fr;
+        padding: 24px 20px 60px;
+      }
+
+      .summary { position: relative; top: 0; }
+    }
+
+    @media (max-width: 560px) {
+      .navbar { padding: 12px 20px; }
+      .hero { padding: 36px 20px 48px; }
+      .cart-card { flex-wrap: wrap; }
+      .cart-card img { width: 70px; height: 70px; }
+    }
+  </style>
 </head>
 
 <body>
 
-<header class="navbar">
-  <div class="logo">🎨 <span>Art Bazaar</span></div>
-  <a href="marketplace.html" class="back-link">Continue Shopping</a>
-  <a href="cart.html">
-    🛒 <span id="cartCount">0</span>
-  </a>
-</header>
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <a href="index.html" class="logo">
+      <div class="logo-icon">🎨</div>
+      <span>Art Bazaar</span>
+    </a>
+    <nav class="nav-right">
+      <a href="marketplace.html" class="back-link">Continue Shopping</a>
+      <a href="cart.html" class="cart-self">
+        🛒 Cart
+        <span id="cartCount" class="cart-badge">0</span>
+      </a>
+    </nav>
+  </header>
 
-<section class="hero">
-  <h1>Shopping Cart</h1>
-</section>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-eyebrow">🛒 Your Selection</div>
+      <h1>Shopping <em>Cart</em></h1>
+      <p>Review your chosen artworks before checkout.</p>
+    </div>
+  </section>
 
-<div class="container">
+  <!-- MAIN CONTENT -->
+  <div class="page-container">
 
-  <!-- Only ONE cartItems -->
-  <div id="cartItems"></div>
-
-  <div class="summary">
-    <h2>Order Summary</h2>
-
-    <div class="row">
-      <span>Subtotal</span>
-      <span id="subtotal">₹0.00</span>
+    <!-- LEFT: Cart Items -->
+    <div class="cart-column">
+      <h2>Your Items</h2>
+      <div id="cartItems"></div>
     </div>
 
-    <div class="row">
-      <span>GST (18%)</span>
-      <span id="gst">₹0.00</span>
+    <!-- RIGHT: Order Summary -->
+    <div class="summary">
+      <h2>Order Summary</h2>
+
+      <div class="row">
+        <span>Subtotal</span>
+        <span id="subtotal">₹0.00</span>
+      </div>
+
+      <div class="row">
+        <span>GST (18%)</span>
+        <span id="gst">₹0.00</span>
+      </div>
+
+      <div class="row total">
+        <span>Total</span>
+        <span id="total">₹0.00</span>
+      </div>
+
+      <button class="checkout-btn">
+        Proceed to Checkout →
+      </button>
+
+      <div class="secure-note">
+        🔒 Secured by Razorpay
+      </div>
     </div>
 
-    <div class="row total">
-      <span>Total</span>
-      <span id="total">₹0.00</span>
-    </div>
-
-    <button class="checkout-btn">
-      Proceed to Checkout →
-    </button>
   </div>
 
-</div>
-
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="js/cart.js" defer></script>
-<script src="js/checkout.js" defer></script>
+  <script src="js/cart.js" defer></script>
+  <script src="js/checkout.js" defer></script>
 
 </body>
 </html>

@@ -99,7 +99,7 @@ function renderArtworks(artworks) {
   if (resultsCount) {
     resultsCount.textContent = `Showing ${artworks.length} artwork${artworks.length !== 1 ? "s" : ""}`;
   }
-data.forEach(art => {
+artworks.forEach(art => {
   grid.innerHTML += `
     <div class="art-card">
       <div class="image-wrapper">
