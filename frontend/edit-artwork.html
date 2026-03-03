@@ -369,6 +369,9 @@
             <option value="Mixed Media">Mixed Media</option>
             <option value="Print">Print</option>
             <option value="Illustration">Illustration</option>
+            <option value="Sketch">Sketch</option>
+            <option value="Traditional">Traditional</option>
+            <option value="Other">Other</option>
           </select>
         </div>
       </div>
@@ -562,7 +565,7 @@
       if (error) throw new Error(error.message);
 
       hideLoading();
-      showToast("✅ Artwork updated successfully!", "success");
+      showToast("Artwork updated successfully!", "success");
 
       // Redirect back to dashboard after short delay
       setTimeout(() => {
